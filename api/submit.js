@@ -5,6 +5,9 @@ export default async function handler(req, res) {
 
   try {
     const webhook = process.env.DISCORD_WEBHOOK_URL;
+    const siteUrl = process.env.SITE_URL;
+    const reviewKey = process.env.REVIEW_KEY;
+
     if (!webhook) {
       return res.status(500).json({
         ok: false,
@@ -12,7 +15,22 @@ export default async function handler(req, res) {
       });
     }
 
+    if (!siteUrl) {
+      return res.status(500).json({
+        ok: false,
+        error: "Brakuje zmiennej SITE_URL na Vercelu."
+      });
+    }
+
+    if (!reviewKey) {
+      return res.status(500).json({
+        ok: false,
+        error: "Brakuje zmiennej REVIEW_KEY na Vercelu."
+      });
+    }
+
     const body = req.body || {};
+
     const required = [
       "lider_nick", "lider_discord", "lider_data",
       "cz2_nick", "cz2_discord", "cz2_data",
@@ -27,6 +45,7 @@ export default async function handler(req, res) {
     }
 
     const video = String(body.video_url).trim();
+
     const videoOk =
       video.includes("tiktok.com") ||
       video.includes("youtube.com") ||
@@ -39,8 +58,7 @@ export default async function handler(req, res) {
       });
     }
 
-    const hashtagOk = String(body.hashtag_confirm) === "true";
-    if (!hashtagOk) {
+    if (String(body.hashtag_confirm) !== "true") {
       return res.status(400).json({
         ok: false,
         error: "Musisz potwierdzić użycie #igrzyskakaucyjne."
@@ -54,7 +72,7 @@ export default async function handler(req, res) {
     const embed = {
       title: "🛡️ Nowe zgłoszenie — Igrzyska Kaucyjne",
       color: 0xe92828,
-      description: `**Status:** DO SPRAWDZENIA\n**Data zgłoszenia:** ${submittedAt}`,
+      description: `**Status:** ⏳ DO SPRAWDZENIA\n**Data zgłoszenia:** ${submittedAt}`,
       fields: [
         {
           name: "♛ Lider",
@@ -92,32 +110,77 @@ export default async function handler(req, res) {
           value:
             "Minimum 12 lat\n" +
             "Minecraft premium\n" +
-            "Filmik na TikToku lub YouTube z #igrzyskakaucyjne",
+            "Filmik TikTok/YouTube z #igrzyskakaucyjne",
           inline: false
         }
       ],
       footer: {
-        text: "Żeby zaakceptować/odrzucić, sprawdź filmik i dane teamu."
+        text: "Kliknij przycisk poniżej, żeby zaakceptować albo odrzucić."
       },
       timestamp: new Date().toISOString()
     };
 
-    const discordResponse = await fetch(webhook, {
+    const firstResponse = await fetch(`${webhook}?wait=true`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         username: "Igrzyska Kaucyjne — Zgłoszenia",
-        avatar_url: "https://cdn-icons-png.flaticon.com/512/616/616490.png",
         content: "📨 Nowe zgłoszenie do sprawdzenia!",
         embeds: [embed]
       })
     });
 
-    if (!discordResponse.ok) {
-      const text = await discordResponse.text();
+    if (!firstResponse.ok) {
+      const text = await firstResponse.text();
       return res.status(500).json({
         ok: false,
         error: "Discord webhook nie przyjął zgłoszenia.",
+        details: text
+      });
+    }
+
+    const sentMessage = await firstResponse.json();
+    const messageId = sentMessage.id;
+
+    const acceptUrl =
+      `${siteUrl}/api/review?action=accept&message=${messageId}&key=${encodeURIComponent(reviewKey)}`;
+
+    const rejectUrl =
+      `${siteUrl}/api/review?action=reject&message=${messageId}&key=${encodeURIComponent(reviewKey)}`;
+
+    const editResponse = await fetch(`${webhook}/messages/${messageId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content: "📨 Nowe zgłoszenie do sprawdzenia!",
+        embeds: [embed],
+        components: [
+          {
+            type: 1,
+            components: [
+              {
+                type: 2,
+                style: 5,
+                label: "✅ Akceptuj",
+                url: acceptUrl
+              },
+              {
+                type: 2,
+                style: 5,
+                label: "❌ Odrzuć",
+                url: rejectUrl
+              }
+            ]
+          }
+        ]
+      })
+    });
+
+    if (!editResponse.ok) {
+      const text = await editResponse.text();
+      return res.status(500).json({
+        ok: false,
+        error: "Nie udało się dodać przycisków do zgłoszenia.",
         details: text
       });
     }
