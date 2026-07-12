@@ -30,9 +30,9 @@ body {
   font-family: "Rajdhani", system-ui, sans-serif;
 
   background:
-    linear-gradient(180deg, rgba(9, 9, 13, 0.08), rgba(9, 9, 13, 0.68) 45%, rgba(9, 9, 13, 0.96) 100%),
-    radial-gradient(circle at 50% 18%, rgba(255, 191, 67, 0.22), transparent 36%),
-    url("assets/panorama.svg") center top / cover no-repeat fixed,
+    linear-gradient(180deg, rgba(9, 9, 13, 0.10), rgba(9, 9, 13, 0.94) 62%, #0d0e13),
+    radial-gradient(circle at 50% 20%, rgba(255, 191, 67, 0.24), transparent 34%),
+    url("assets/panorama.png") center top / cover fixed,
     #15151c;
 
   overflow-x: hidden;
