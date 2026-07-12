@@ -32,7 +32,7 @@ body {
   background:
     linear-gradient(180deg, rgba(9, 9, 13, 0.10), rgba(9, 9, 13, 0.94) 62%, #0d0e13),
     radial-gradient(circle at 50% 20%, rgba(255, 191, 67, 0.24), transparent 34%),
-    url("assets/panorama.png") center top / cover fixed,
+    url("panorama.png") center top / cover fixed,
     #15151c;
 
   overflow-x: hidden;
