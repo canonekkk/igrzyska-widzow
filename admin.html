@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Igrzyska Kaucyjne — Panel zgłoszeń</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="page">
+    <header>
+  <a href="index.html"><img class="logo" src="assets/logo.png" alt="Igrzyska Kaucyjne" /></a>
+  <div class="topline">◆ REKRUTACJA TEAMÓW ◆</div>
+</header>
+    <nav class="nav">
+  <a href="index.html">🏠 Start</a>
+  <a href="zgloszenia.html">🛡 Zgłoś się</a>
+  <a href="informacje.html">ⓘ Informacje</a>
+  <a href="wymagania.html">⚔ Wymagania</a>
+  <a href="admin.html" class="active">👑 Panel</a>
+</nav>
+
+    <section class="card admin-steps">
+      <h1 class="card-title">Panel sprawdzania zgłoszeń</h1>
+
+      <div class="list">
+        <div class="list-item">
+          <h2>Jak to działa?</h2>
+          <p>
+            Formularz na stronie wysyła każde zgłoszenie na prywatny kanał Discord przez webhook.
+            Ty i kolega macie mieć dostęp do tego kanału, więc obaj możecie sprawdzać zgłoszenia.
+          </p>
+        </div>
+
+        <div class="list-item">
+          <h2>Co trzeba zrobić na Discordzie?</h2>
+          <p>
+            Utwórz prywatny kanał, np. <strong>#zgłoszenia-kaucyjne</strong>.
+            Daj dostęp tylko sobie i koledze. Potem w ustawieniach kanału utwórz webhook.
+          </p>
+        </div>
+
+        <div class="list-item">
+          <h2>Co trzeba zrobić na Vercelu?</h2>
+          <p>W projekcie Vercel dodaj zmienną środowiskową:</p>
+          <code class="code">DISCORD_WEBHOOK_URL = tutaj_wklej_link_webhooka</code>
+          <p>Potem zrób redeploy strony. Od tego momentu zgłoszenia będą przychodzić na Discorda.</p>
+        </div>
+
+        <div class="list-item">
+          <h2>Sprawdzanie filmiku</h2>
+          <p>
+            Każde zgłoszenie musi mieć link do TikToka albo YouTube oraz potwierdzenie hashtagu
+            <strong>#igrzyskakaucyjne</strong>. Bez tego zgłoszenie nie powinno być przyjęte.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+  <div><strong>IGRZYSKA KAUCYJNE</strong><br />Najlepsi. Rywalizują. Wygrywają.</div>
+  <div>
+    <a href="informacje.html">Informacje</a>
+    <a href="zgloszenia.html">Zgłoszenia</a>
+    <a href="wymagania.html">Wymagania</a>
+    <span>© 2026 Igrzyska Kaucyjne</span>
+  </div>
+</footer>
+  </main>
+</body>
+</html>

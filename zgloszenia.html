@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Igrzyska Kaucyjne — Zgłoszenia</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="page">
+    <header>
+  <a href="index.html"><img class="logo" src="assets/logo.png" alt="Igrzyska Kaucyjne" /></a>
+  <div class="topline">◆ REKRUTACJA TEAMÓW ◆</div>
+</header>
+    <nav class="nav">
+      <a href="index.html">🏠 Start</a>
+      <a href="zgloszenia.html" class="active">🛡 Zgłoś się</a>
+      <a href="informacje.html">ⓘ Informacje</a>
+      <a href="wymagania.html">⚔ Wymagania</a>
+      <a href="admin.html">👑 Panel</a>
+    </nav>
+
+    <section class="main-grid">
+      <form class="card" id="signupForm">
+        <h2 class="card-title">Formularz zgłoszeniowy</h2>
+
+        <div class="form-grid">
+          <div class="member leader">
+            <h3>♛ Lider</h3>
+            <label>Nick Minecraft</label>
+            <input name="lider_nick" placeholder="np. Canonek" required />
+            <label>ID Discord</label>
+            <input name="lider_discord" placeholder="np. 123456789 albo @nick" required />
+            <label>Data urodzenia</label>
+            <input name="lider_data" placeholder="DD.MM.RRRR" required />
+          </div>
+
+          <div class="member m2">
+            <h3>◆ Członek 2</h3>
+            <label>Nick Minecraft</label>
+            <input name="cz2_nick" placeholder="Nick Minecraft" required />
+            <label>ID Discord</label>
+            <input name="cz2_discord" placeholder="ID Discord" required />
+            <label>Data urodzenia</label>
+            <input name="cz2_data" placeholder="DD.MM.RRRR" required />
+          </div>
+
+          <div class="member m3">
+            <h3>◇ Członek 3</h3>
+            <label>Nick Minecraft</label>
+            <input name="cz3_nick" placeholder="Nick Minecraft" required />
+            <label>ID Discord</label>
+            <input name="cz3_discord" placeholder="ID Discord" required />
+            <label>Data urodzenia</label>
+            <input name="cz3_data" placeholder="DD.MM.RRRR" required />
+          </div>
+        </div>
+
+        <div class="video-box">
+          <h3>🎬 Filmik zgłoszeniowy</h3>
+          <label>Link do TikToka lub YouTube</label>
+          <input name="video_url" placeholder="https://www.tiktok.com/... albo https://youtube.com/..." required />
+          <label class="checkbox-row">
+            <input type="checkbox" name="hashtag_confirm" required />
+            <span>Potwierdzam, że w filmiku/opisie jest hashtag <strong>#igrzyskakaucyjne</strong>. Bez tego zgłoszenie nie zostanie przyjęte.</span>
+          </label>
+        </div>
+
+        <div class="submit-row">
+          <button class="big-button" type="submit">Wyślij zgłoszenie</button>
+          <div class="hint">
+            Zgłoszenie poleci do administracji na prywatny kanał Discord.
+          </div>
+        </div>
+
+        <div id="resultBox" class="result-box"></div>
+      </form>
+
+      <aside class="card">
+        <h2 class="card-title">Wymagania</h2>
+        <div class="requirements">
+          <div class="req"><div class="check">✓</div><div><strong>Minimum 12 lat</strong><small>Każdy uczestnik teamu.</small></div></div>
+          <div class="req"><div class="check">✓</div><div><strong>Minecraft premium</strong><small>Wymagane konto Java Edition.</small></div></div>
+          <div class="req"><div class="check">✓</div><div><strong>Filmik zgłoszeniowy</strong><small>TikTok lub YouTube z #igrzyskakaucyjne.</small></div></div>
+        </div>
+        <div class="info-box">
+          Bez filmiku z hashtagiem <strong>#igrzyskakaucyjne</strong> zgłoszenie nie będzie przyjmowane.
+        </div>
+      </aside>
+    </section>
+
+    <footer>
+  <div><strong>IGRZYSKA KAUCYJNE</strong><br />Najlepsi. Rywalizują. Wygrywają.</div>
+  <div>
+    <a href="informacje.html">Informacje</a>
+    <a href="zgloszenia.html">Zgłoszenia</a>
+    <a href="wymagania.html">Wymagania</a>
+    <span>© 2026 Igrzyska Kaucyjne</span>
+  </div>
+</footer>
+  </main>
+
+  <script>
+    const form = document.getElementById("signupForm");
+    const resultBox = document.getElementById("resultBox");
+
+    function setResult(type, text) {
+      resultBox.className = "result-box " + type;
+      resultBox.textContent = text;
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      setResult("", "");
+
+      const data = Object.fromEntries(new FormData(form).entries());
+      data.hashtag_confirm = form.querySelector('[name="hashtag_confirm"]').checked ? "true" : "false";
+
+      const video = String(data.video_url || "").toLowerCase();
+      if (!video.includes("tiktok.com") && !video.includes("youtube.com") && !video.includes("youtu.be")) {
+        setResult("err", "Filmik musi być z TikToka albo YouTube.");
+        return;
+      }
+
+      try {
+        setResult("ok", "Wysyłanie zgłoszenia...");
+        const res = await fetch("/api/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
+        const json = await res.json();
+        if (!res.ok || !json.ok) {
+          setResult("err", json.error || "Nie udało się wysłać zgłoszenia.");
+          return;
+        }
+
+        setResult("ok", "Zgłoszenie wysłane! Administracja sprawdzi filmik i dane teamu.");
+        form.reset();
+      } catch (err) {
+        setResult("err", "Błąd połączenia z API. Sprawdź deploy na Vercelu i webhook Discord.");
+      }
+    });
+  </script>
+</body>
+</html>
