@@ -1,6 +1,9 @@
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ ok: false, error: "Method not allowed" });
+    return res.status(405).json({
+      ok: false,
+      error: "Method not allowed"
+    });
   }
 
   try {
@@ -32,15 +35,24 @@ export default async function handler(req, res) {
     const body = req.body || {};
 
     const required = [
-      "lider_nick", "lider_discord", "lider_data",
-      "cz2_nick", "cz2_discord", "cz2_data",
-      "cz3_nick", "cz3_discord", "cz3_data",
+      "lider_nick",
+      "lider_discord",
+      "lider_data",
+      "cz2_nick",
+      "cz2_discord",
+      "cz2_data",
+      "cz3_nick",
+      "cz3_discord",
+      "cz3_data",
       "video_url"
     ];
 
     for (const key of required) {
       if (!body[key] || String(body[key]).trim().length < 2) {
-        return res.status(400).json({ ok: false, error: "Uzupełnij wszystkie pola." });
+        return res.status(400).json({
+          ok: false,
+          error: "Uzupełnij wszystkie pola."
+        });
       }
     }
 
@@ -72,7 +84,9 @@ export default async function handler(req, res) {
     const embed = {
       title: "🛡️ Nowe zgłoszenie — Igrzyska Kaucyjne",
       color: 0xe92828,
-      description: `**Status:** ⏳ DO SPRAWDZENIA\n**Data zgłoszenia:** ${submittedAt}`,
+      description:
+        `**Status:** ⏳ DO SPRAWDZENIA\n` +
+        `**Data zgłoszenia:** ${submittedAt}`,
       fields: [
         {
           name: "♛ Lider",
@@ -115,14 +129,16 @@ export default async function handler(req, res) {
         }
       ],
       footer: {
-        text: "Kliknij przycisk poniżej, żeby zaakceptować albo odrzucić."
+        text: "Kliknij link Akceptuj/Odrzuć pod wiadomością."
       },
       timestamp: new Date().toISOString()
     };
 
     const firstResponse = await fetch(`${webhook}?wait=true`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
         username: "Igrzyska Kaucyjne — Zgłoszenia",
         content: "📨 Nowe zgłoszenie do sprawdzenia!",
@@ -132,6 +148,7 @@ export default async function handler(req, res) {
 
     if (!firstResponse.ok) {
       const text = await firstResponse.text();
+
       return res.status(500).json({
         ok: false,
         error: "Discord webhook nie przyjął zgłoszenia.",
@@ -142,45 +159,35 @@ export default async function handler(req, res) {
     const sentMessage = await firstResponse.json();
     const messageId = sentMessage.id;
 
+    const cleanSiteUrl = siteUrl.replace(/\/$/, "");
+
     const acceptUrl =
-      `${siteUrl}/api/review?action=accept&message=${messageId}&key=${encodeURIComponent(reviewKey)}`;
+      `${cleanSiteUrl}/api/review?action=accept&message=${messageId}&key=${encodeURIComponent(reviewKey)}`;
 
     const rejectUrl =
-      `${siteUrl}/api/review?action=reject&message=${messageId}&key=${encodeURIComponent(reviewKey)}`;
+      `${cleanSiteUrl}/api/review?action=reject&message=${messageId}&key=${encodeURIComponent(reviewKey)}`;
 
     const editResponse = await fetch(`${webhook}/messages/${messageId}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
-        content: "📨 Nowe zgłoszenie do sprawdzenia!",
-        embeds: [embed],
-        components: [
-          {
-            type: 1,
-            components: [
-              {
-                type: 2,
-                style: 5,
-                label: "✅ Akceptuj",
-                url: acceptUrl
-              },
-              {
-                type: 2,
-                style: 5,
-                label: "❌ Odrzuć",
-                url: rejectUrl
-              }
-            ]
-          }
-        ]
+        username: "Igrzyska Kaucyjne — Zgłoszenia",
+        content:
+          "📨 Nowe zgłoszenie do sprawdzenia!\n\n" +
+          `✅ **[Akceptuj zgłoszenie](${acceptUrl})**\n` +
+          `❌ **[Odrzuć zgłoszenie](${rejectUrl})**`,
+        embeds: [embed]
       })
     });
 
     if (!editResponse.ok) {
       const text = await editResponse.text();
+
       return res.status(500).json({
         ok: false,
-        error: "Nie udało się dodać przycisków do zgłoszenia.",
+        error: "Nie udało się dodać linków Akceptuj/Odrzuć do zgłoszenia.",
         details: text
       });
     }
