@@ -7,28 +7,20 @@ export default async function handler(req, res) {
   }
 
   try {
-    const webhook = process.env.DISCORD_WEBHOOK_URL;
-    const siteUrl = process.env.SITE_URL;
-    const reviewKey = process.env.REVIEW_KEY;
+    const botToken = process.env.DISCORD_BOT_TOKEN;
+    const channelId = process.env.DISCORD_SUBMISSIONS_CHANNEL_ID;
 
-    if (!webhook) {
+    if (!botToken) {
       return res.status(500).json({
         ok: false,
-        error: "Brakuje zmiennej DISCORD_WEBHOOK_URL na Vercelu."
+        error: "Brakuje zmiennej DISCORD_BOT_TOKEN na Vercelu."
       });
     }
 
-    if (!siteUrl) {
+    if (!channelId) {
       return res.status(500).json({
         ok: false,
-        error: "Brakuje zmiennej SITE_URL na Vercelu."
-      });
-    }
-
-    if (!reviewKey) {
-      return res.status(500).json({
-        ok: false,
-        error: "Brakuje zmiennej REVIEW_KEY na Vercelu."
+        error: "Brakuje zmiennej DISCORD_SUBMISSIONS_CHANNEL_ID na Vercelu."
       });
     }
 
@@ -129,65 +121,57 @@ export default async function handler(req, res) {
         }
       ],
       footer: {
-        text: "Kliknij link Akceptuj/Odrzuć pod wiadomością."
+        text: "Kliknij Akceptuj albo Odrzuć."
       },
       timestamp: new Date().toISOString()
     };
 
-    const firstResponse = await fetch(`${webhook}?wait=true`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        username: "Igrzyska Kaucyjne — Zgłoszenia",
-        content: "📨 Nowe zgłoszenie do sprawdzenia!",
-        embeds: [embed]
-      })
-    });
+    const discordResponse = await fetch(
+      `https://discord.com/api/v10/channels/${channelId}/messages`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bot ${botToken}`
+        },
+        body: JSON.stringify({
+          content: "📨 Nowe zgłoszenie do sprawdzenia!",
+          embeds: [embed],
+          components: [
+            {
+              type: 1,
+              components: [
+                {
+                  type: 2,
+                  style: 3,
+                  label: "Akceptuj",
+                  emoji: {
+                    name: "✅"
+                  },
+                  custom_id: "kaucyjne_accept"
+                },
+                {
+                  type: 2,
+                  style: 4,
+                  label: "Odrzuć",
+                  emoji: {
+                    name: "❌"
+                  },
+                  custom_id: "kaucyjne_reject"
+                }
+              ]
+            }
+          ]
+        })
+      }
+    );
 
-    if (!firstResponse.ok) {
-      const text = await firstResponse.text();
-
-      return res.status(500).json({
-        ok: false,
-        error: "Discord webhook nie przyjął zgłoszenia.",
-        details: text
-      });
-    }
-
-    const sentMessage = await firstResponse.json();
-    const messageId = sentMessage.id;
-
-    const cleanSiteUrl = siteUrl.replace(/\/$/, "");
-
-    const acceptUrl =
-      `${cleanSiteUrl}/api/review?action=accept&message=${messageId}&key=${encodeURIComponent(reviewKey)}`;
-
-    const rejectUrl =
-      `${cleanSiteUrl}/api/review?action=reject&message=${messageId}&key=${encodeURIComponent(reviewKey)}`;
-
-    const editResponse = await fetch(`${webhook}/messages/${messageId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        username: "Igrzyska Kaucyjne — Zgłoszenia",
-        content:
-          "📨 Nowe zgłoszenie do sprawdzenia!\n\n" +
-          `✅ **[Akceptuj zgłoszenie](${acceptUrl})**\n` +
-          `❌ **[Odrzuć zgłoszenie](${rejectUrl})**`,
-        embeds: [embed]
-      })
-    });
-
-    if (!editResponse.ok) {
-      const text = await editResponse.text();
+    if (!discordResponse.ok) {
+      const text = await discordResponse.text();
 
       return res.status(500).json({
         ok: false,
-        error: "Nie udało się dodać linków Akceptuj/Odrzuć do zgłoszenia.",
+        error: "Bot nie wysłał zgłoszenia na Discorda.",
         details: text
       });
     }
